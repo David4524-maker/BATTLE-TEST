@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BATTLE TEST - Arena de Combate</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; padding: 0;
+            background: radial-gradient(circle at center, #FF8C00, #8B4500);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden; transition: background 0.5s;
+        }
+        body.dark { background: radial-gradient(circle at center, #1a1a2e, #0f0f1a); }
+        body.dark .container { background: #16213e; color: #eee; }
+        body.dark .title { color: #ff6b6b; }
+        body.dark .status { color: #feca57; }
+        body.dark input[type="text"]#pregunta-input { background: #0f3460; color: white; border-color: #ff6b6b; }
+        body.dark .user-ai-bar { background: rgba(0,0,0,0.3); }
+
+        .container {
+            width: 1280px; height: 780px; background-color: #FF8C00;
+            position: relative; display: flex; flex-direction: column;
+            border-radius: 15px; overflow: hidden; transition: background 0.5s;
+        }
+
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 6px 20px; flex-wrap: wrap; gap: 8px;
+        }
+        .title {
+            font-size: 24px; font-weight: bold; color: #8B0000; margin: 0;
+            text-shadow: 2px 2px 0 rgba(255,255,255,0.3);
+        }
+        .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .idiomas-container { display: flex; align-items: center; gap: 6px; }
+        .idiomas-label { color: #9370DB; font-weight: bold; font-size: 15px; }
+        select, .icon-btn {
+            padding: 5px 8px; border-radius: 6px; border: 2px solid #9370DB;
+            font-weight: bold; color: #9370DB; background: white;
+            outline: none; cursor: pointer; font-size: 13px;
+        }
+        .icon-btn { border-color: #333; color: #333; }
+        .icon-btn.active { background: #9370DB; color: white; border-color: #6a4fa3; }
+
+        #mode-select {
+            border-color: #4B0082; color: #4B0082; font-weight: bold;
+            background: #E6E6FA; font-size: 13px;
+        }
+
+        #btn-scratch-mode, #btn-realistic-mode {
+            background: white; border: 2px solid #8B0000; color: #8B0000;
+            padding: 5px 10px; font-size: 13px; border-radius: 6px;
+            cursor: pointer; font-weight: bold; transition: all 0.2s;
+        }
+        #btn-scratch-mode.active, #btn-realistic-mode.active {
+            background: #8B0000; color: white;
+            box-shadow: 0 0 12px rgba(139,0,0,0.8);
+            animation: pulse-scratch 1.5s infinite;
+        }
+        #btn-realistic-mode.active { background: #4B0000; border-color: #FF0000; }
+        @keyframes pulse-scratch {
+            0%, 100% { box-shadow: 0 0 12px rgba(139,0,0,0.8); }
+            50% { box-shadow: 0 0 22px rgba(255,0,0,1); }
+        }
+
+        .user-ai-bar {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 20px; background: rgba(255,255,255,0.15);
+            border-top: 2px solid #8B0000; border-bottom: 2px solid #8B0000;
+            flex-wrap: wrap;
+        }
+        .user-ai-bar label { color: #8B0000; font-weight: bold; font-size: 13px; }
+        .user-ai-bar input[type="text"]#user-name {
+            padding: 5px 8px; border: 2px solid #8B0000; border-radius: 5px;
+            font-size: 13px; font-weight: bold; width: 110px;
+            background: white; color: #333; outline: none;
+        }
+        .emoji-group {
+            display: flex; align-items: center; gap: 5px;
+            background: white; border: 2px solid #8B0000; border-radius: 5px;
+            padding: 2px 6px;
+        }
+        #user-emoji-input {
+            width: 50px; height: 30px; border: none; outline: none; background: transparent;
+            font-size: 22px; text-align: center;
+            font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", Arial;
+            cursor: pointer;
+        }
+        .emoji-preview {
+            font-size: 22px; width: 30px; text-align: center;
+            font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", Arial;
+            pointer-events: none;
+        }
+        .emoji-quickpick { display: flex; gap: 2px; }
+        .emoji-quickpick button {
+            padding: 2px 6px; font-size: 16px; border-width: 1px;
+            background: white; border-color: #8B0000; color: #8B0000;
+            min-width: 28px; height: 28px;
+            font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", Arial;
+        }
+        .emoji-quickpick button:hover { background: #FFE4E1; }
+        #btn-random-emoji {
+            background: #FF8C00; border-color: #8B4500; color: white;
+            padding: 4px 8px; font-size: 14px; min-width: 30px;
+        }
+
+        .skin-editor {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(147, 112, 219, 0.2);
+            border: 2px solid #9370DB; border-radius: 6px;
+            padding: 3px 8px;
+        }
+        .skin-editor label { color: #4B0082; font-weight: bold; font-size: 13px; }
+        #btn-upload-skin {
+            background: #9370DB; border-color: #6a4fa3; color: white;
+            padding: 5px 10px; font-size: 12px; border-width: 2px;
+            border-radius: 5px; cursor: pointer; font-weight: bold;
+            transition: all 0.2s;
+        }
+        #btn-upload-skin:hover { background: #7B5FC7; }
+        #btn-clear-skin {
+            background: #DC143C; border-color: #8B0000; color: white;
+            padding: 5px 8px; font-size: 12px; border-width: 2px;
+            border-radius: 5px; cursor: pointer; font-weight: bold;
+            display: none;
+        }
+        #btn-clear-skin.visible { display: inline-block; }
+        .skin-preview {
+            width: 36px; height: 36px;
+            border: 2px dashed #9370DB; border-radius: 5px;
+            background: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; color: #9370DB; font-weight: bold;
+            overflow: hidden; position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .skin-preview:hover { border-color: #4B0082; }
+        .skin-preview.has-image { border-style: solid; border-color: #4B0082; }
+        .skin-preview img { width: 100%; height: 100%; object-fit: cover; border-radius: 3px; }
+        .skin-preview::after { content: attr(data-label); }
+        .skin-preview.has-image::after { content: ''; }
+        .skin-preview.dragover { background: #FFE4E1; border-color: #DC143C; transform: scale(1.05); }
+
+        #btn-add-ai { background-color: #4B0082; border-color: #2d0050; padding: 6px 14px; font-size: 13px; border-width: 2px; }
+        #btn-remove-ai { background-color: #8B0000; border-color: #5c0000; padding: 6px 14px; font-size: 13px; border-width: 2px; }
+        .user-active-badge {
+            background: #4B0082; color: white; padding: 4px 12px;
+            border-radius: 12px; font-weight: bold; font-size: 13px;
+            display: none; align-items: center; gap: 6px;
+            font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", Arial;
+        }
+        .user-active-badge.visible { display: flex; }
+        .user-active-badge img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; border: 1px solid white; }
+
+        .hud {
+            display: flex; gap: 12px; justify-content: center;
+            padding: 3px 20px; font-weight: bold; color: #8B0000;
+        }
+        .hud-item {
+            background: rgba(255,255,255,0.5); padding: 3px 10px;
+            border-radius: 12px; font-size: 13px; border: 2px solid #8B0000;
+        }
+
+        .main-content { display: flex; flex: 1; padding: 0 15px 12px 15px; gap: 12px; overflow: hidden; }
+
+        .side-panel { width: 220px; display: flex; flex-direction: column; gap: 8px; }
+        .banca-panel, .score-panel, .history-panel {
+            background-color: #228B22; border: 4px solid #006400;
+            border-radius: 10px; display: flex; flex-direction: column;
+            padding: 6px; box-shadow: 5px 5px 0 rgba(0,0,0,0.2);
+        }
+        .score-panel { background: #4B0082; border-color: #2d0050; }
+        .history-panel { background: #8B4513; border-color: #5c2e0d; }
+        .panel-title {
+            color: white; text-align: center; font-weight: bold;
+            font-size: 11px; margin-bottom: 5px; text-shadow: 1px 1px 2px black;
+        }
+        #lista-banca, #lista-score, #lista-history {
+            flex: 1; background-color: #90EE90; border: 2px solid #006400;
+            border-radius: 5px; padding: 5px; overflow-y: auto;
+            font-weight: bold; color: #333; list-style: none; margin: 0; font-size: 11px;
+        }
+        #lista-score { background: #DDA0DD; border-color: #4B0082; }
+        #lista-history { background: #FFDEAD; border-color: #8B4513; }
+        #lista-banca li, #lista-score li, #lista-history li {
+            padding: 2px 4px; border-bottom: 1px dashed rgba(0,0,0,0.3);
+            animation: fadeIn 0.5s; display: flex; justify-content: space-between;
+        }
+        #lista-banca li.worst { background: #444; color: #aaa; font-style: italic; }
+        #lista-banca li.user-item, #lista-score li.user-item { background: #DDA0DD; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+        .arena-wrapper { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .canvas-container {
+            flex: 1; position: relative; border-radius: 15px;
+            overflow: hidden; box-shadow: 5px 5px 0 rgba(0,0,0,0.2);
+        }
+        .shake { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+        canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+
+        .progress-container {
+            height: 10px; background: rgba(0,0,0,0.3); border-radius: 5px;
+            overflow: hidden; border: 2px solid #333;
+        }
+        #progress-bar {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #32CD32, #FFD700, #DC143C);
+            transition: width 0.5s linear;
+        }
+
+        .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        input[type="text"]#pregunta-input {
+            flex: 1; min-width: 180px; padding: 9px;
+            border: 3px solid #333; border-radius: 8px;
+            font-size: 13px; outline: none;
+        }
+        button {
+            padding: 9px 14px; color: white; border: 3px solid #006400;
+            border-radius: 8px; font-size: 13px; font-weight: bold;
+            cursor: pointer; transition: transform 0.1s, filter 0.2s;
+        }
+        button:hover { filter: brightness(1.1); }
+        button:active { transform: scale(0.95); }
+        #btn-pelear { background-color: #32CD32; }
+        #btn-reiniciar { background-color: #DC143C; border-color: #8B0000; }
+        #btn-pausa { background-color: #FF8C00; border-color: #8B4500; }
+        button:disabled { background-color: #888; border-color: #555; cursor: not-allowed; transform: none; filter: none; }
+
+        .status {
+            text-align: center; font-weight: bold; color: #8B0000;
+            font-size: 13px; height: 16px;
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+        }
+
+        .loading-screen {
+            position: absolute; inset: 0; background: #FF8C00;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; transition: opacity 0.5s;
+        }
+        .loading-screen.hidden { opacity: 0; pointer-events: none; }
+        .loading-title { font-size: 40px; font-weight: bold; color: #8B0000; margin-bottom: 20px; }
+        .loading-spinner {
+            width: 60px; height: 60px; border: 8px solid rgba(139,0,0,0.2);
+            border-top-color: #8B0000; border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .commentary {
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.75); color: white; padding: 6px 16px;
+            border-radius: 15px; font-weight: bold; font-size: 13px;
+            pointer-events: none; opacity: 0; transition: opacity 0.3s;
+            z-index: 10; text-align: center; max-width: 80%;
+        }
+        .commentary.visible { opacity: 1; }
+        .commentary.scratch { background: rgba(139,0,0,0.9); font-size: 14px; }
+        .commentary.realistic { background: rgba(75,0,0,0.95); font-size: 15px; letter-spacing: 1px; }
+
+        .skin-toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: #4B0082; color: white; padding: 12px 24px;
+            border-radius: 25px; font-weight: bold; font-size: 14px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000; display: flex; align-items: center; gap: 10px;
+        }
+        .skin-toast.visible { transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app-container">
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-title" id="loading-title">BATTLE TEST</div>
+        <div class="loading-spinner"></div>
+        <p style="color:#8B0000;font-weight:bold;margin-top:20px;" id="loading-text">Cargando avatares...</p>
+    </div>
+
+    <div class="header">
+        <h1 class="title" id="main-title">BATTLE TEST</h1>
+        <div class="header-controls">
+            <select id="mode-select" title="Modo de batalla">
+                <option value="ai">🤖 Batalla IA (defecto)</option>
+                <option value="browsers">🌐 Batalla Navegadores</option>
+                <option value="langs">💻 Batalla Lenguajes</option>
+            </select>
+            <button id="btn-scratch-mode" title="Modo Rasguño">🩸 <span id="lbl-scratch-mode">Rasguño</span></button>
+            <button id="btn-realistic-mode" title="Modo Realista">🎬 <span id="lbl-realistic-mode">Realista</span></button>
+            <button class="icon-btn" id="btn-sound" title="Sonido">🔊</button>
+            <button class="icon-btn" id="btn-theme" title="Tema">🌙</button>
+            <div class="idiomas-container">
+                <span class="idiomas-label" id="lbl-idiomas">idiomas</span>
+                <select id="idioma-select">
+                    <option value="Español">Español</option>
+                    <option value="English">English</option>
+                    <option value="Français">Français</option>
+                    <option value="Deutsch">Deutsch</option>
+                    <option value="Português">Português</option>
+                    <option value="Italiano">Italiano</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="user-ai-bar">
+        <label id="lbl-user-ai">🎮 Tu IA:</label>
+        <input type="text" id="user-name" placeholder="Nombre" maxlength="12">
+        
+        <label style="margin-left:6px;" id="lbl-emoji">Logo:</label>
+        <div class="emoji-group">
+            <input type="text" id="user-emoji-input" maxlength="4" value="🤖" placeholder="?" title="Escribe o pega cualquier emoji">
+            <span class="emoji-preview" id="emoji-preview">🤖</span>
+        </div>
+        <div class="emoji-quickpick" id="quickpick">
+            <button type="button" data-emoji="🤖">🤖</button>
+            <button type="button" data-emoji="👾">👾</button>
+            <button type="button" data-emoji="🐱">🐱</button>
+            <button type="button" data-emoji="🐉">🐉</button>
+            <button type="button" data-emoji="🔥">🔥</button>
+            <button type="button" data-emoji="⭐">⭐</button>
+            <button type="button" data-emoji="👑">👑</button>
+            <button type="button" data-emoji="💎">💎</button>
+        </div>
+        <button type="button" id="btn-random-emoji" title="Emoji aleatorio">🎲</button>
+        
+        <div class="skin-editor">
+            <label id="lbl-skin">🎨 Skin:</label>
+            <input type="file" id="file-skin" accept="image/*" style="display:none;">
+            <div class="skin-preview" id="skin-preview" data-label="?" title="Sube o arrastra una imagen"></div>
+            <button type="button" id="btn-upload-skin">📷 Subir</button>
+            <button type="button" id="btn-clear-skin">✕</button>
+        </div>
+        
+        <button id="btn-add-ai">+ Añadir mi IA</button>
+        <button id="btn-remove-ai" style="display:none;">✕ Quitar</button>
+        <div class="user-active-badge" id="user-badge"></div>
+    </div>
+
+    <div class="hud">
+        <span class="hud-item"><span id="lbl-round">Ronda</span>: <span id="round-counter">0</span></span>
+        <span class="hud-item"><span id="lbl-time">Tiempo</span>: <span id="timer-display">60</span>s</span>
+        <span class="hud-item"><span id="lbl-fase">Fase</span>: <span id="phase-display">-</span></span>
+    </div>
+
+    <div class="main-content">
+        <div class="side-panel">
+            <div class="banca-panel">
+                <div class="panel-title" id="lbl-losers">PERDEDORES DE LA RONDA</div>
+                <ul id="lista-banca"></ul>
+            </div>
+            <div class="score-panel">
+                <div class="panel-title" id="lbl-score">TABLA DE POSICIONES</div>
+                <ul id="lista-score"></ul>
+            </div>
+            <div class="history-panel">
+                <div class="panel-title" id="lbl-history">HISTORIAL</div>
+                <ul id="lista-history"></ul>
+            </div>
+        </div>
+
+        <div class="arena-wrapper">
+            <div class="canvas-container" id="canvas-container">
+                <canvas id="arena" width="850" height="420"></canvas>
+                <div class="commentary" id="commentary"></div>
+            </div>
+            <div class="progress-container"><div id="progress-bar"></div></div>
+            <div class="controls">
+                <input type="text" id="pregunta-input" placeholder="Escribe tu pregunta o respuesta...">
+                <button id="btn-pelear">¡Iniciar Batalla!</button>
+                <button id="btn-pausa">⏸</button>
+                <button id="btn-reiniciar">Reiniciar</button>
+            </div>
+            <div class="status" id="status-text">Los avatares están patrullando la arena...</div>
+        </div>
+    </div>
+</div>
+
+<div class="skin-toast" id="skin-toast">
+    <span>🎨</span> <span id="skin-toast-text">¡Skin cargada!</span>
+</div>
+
+<script>
+    // ============ TRADUCCIONES ============
+    const TRANSLATIONS = {
+        Español: {
+            title: "BATTLE TEST", languages: "idiomas", userAI: "🎮 Tu IA:", emojiLabel: "Logo:",
+            scratchMode: "Rasguño", realisticMode: "Realista", skinLabel: "🎨 Skin:",
+            uploadSkin: "📷 Subir", skinLoaded: "¡Skin cargada con éxito!",
+            skinCleared: "Skin eliminada", skinError: "Error al cargar la imagen",
+            skinTooBig: "Imagen demasiado grande (máx 2MB)",
+            placeholder: "Escribe tu pregunta o respuesta...",
+            startBattle: "¡Iniciar Batalla!", reset: "Reiniciar",
+            addAI: "+ Añadir mi IA", removeAI: "✕ Quitar", userName: "Nombre",
+            losersPanel: "PERDEDORES DE LA RONDA", scorePanel: "TABLA DE POSICIONES",
+            historyPanel: "HISTORIAL",
+            idle: "Los avatares están patrullando la arena...",
+            phase1: "Fase 1: Los avatares se acercan al centro de la arena...",
+            phase2: "Fase 2: ¡CHOQUE DE ESPADAS! ¡La batalla está en su punto máximo!",
+            phase3: "¡La batalla ha terminado! Evaluando ganadores...",
+            winner: "¡{name} ha ganado la batalla! El peor perdedor: {worst}",
+            celebrating: "🏆 ¡{name} sigue celebrando! Peor perdedor: {worst} en el suelo.",
+            alert: "Por favor, escribe una pregunta o respuesta.",
+            alertName: "Por favor, ponle un nombre a tu IA.",
+            alertEmoji: "Por favor, elige un emoji o sube una skin para tu IA.",
+            round: "Ronda", time: "Tiempo", phase: "Fase",
+            loading: "Cargando avatares...", worstLabel: "💀 PEOR:",
+            userAdded: "¡Tu IA {name} se ha unido a la arena!",
+            scratchActivated: "🩸 ¡MODO RASGUÑO ACTIVADO!",
+            scratchDeactivated: "Modo Rasguño desactivado.",
+            scratchCommentary: "🩸 ¡RASGUÑO!",
+            realisticActivated: "🎬 ¡MODO REALISTA ACTIVADO! Sangre real.",
+            realisticDeactivated: "Modo Realista desactivado.",
+            realisticHit: "💥 ¡IMPACTO!",
+            realisticDeath: "💀 ¡CAÍDO!"
+        },
+        English: {
+            title: "BATTLE TEST", languages: "languages", userAI: "🎮 Your AI:", emojiLabel: "Logo:",
+            scratchMode: "Scratch", realisticMode: "Realistic", skinLabel: "🎨 Skin:",
+            uploadSkin: "📷 Upload", skinLoaded: "Skin loaded successfully!",
+            skinCleared: "Skin removed", skinError: "Error loading image",
+            skinTooBig: "Image too large (max 2MB)",
+            placeholder: "Write your question or answer...",
+            startBattle: "Start Battle!", reset: "Reset",
+            addAI: "+ Add my AI", removeAI: "✕ Remove", userName: "Name",
+            losersPanel: "ROUND LOSERS", scorePanel: "SCOREBOARD", historyPanel: "HISTORY",
+            idle: "The avatars are patrolling the arena...",
+            phase1: "Phase 1: The avatars approach the center...",
+            phase2: "Phase 2: SWORD CLASH! The battle peaks!",
+            phase3: "The battle is over! Evaluating winners...",
+            winner: "{name} has won! Worst loser: {worst}",
+            celebrating: "🏆 {name} keeps celebrating! Worst loser: {worst}.",
+            alert: "Please write a question or answer.",
+            alertName: "Please give your AI a name.",
+            alertEmoji: "Please choose an emoji or upload a skin for your AI.",
+            round: "Round", time: "Time", phase: "Phase",
+            loading: "Loading avatars...", worstLabel: "💀 WORST:",
+            userAdded: "Your AI {name} joined the arena!",
+            scratchActivated: "🩸 SCRATCH MODE ON!",
+            scratchDeactivated: "Scratch Mode off.",
+            scratchCommentary: "🩸 SCRATCH!",
+            realisticActivated: "🎬 REALISTIC MODE ON!",
+            realisticDeactivated: "Realistic Mode off.",
+            realisticHit: "💥 HIT!",
+            realisticDeath: "💀 DOWN!"
+        },
+        Français: {
+            title: "BATTLE TEST", languages: "langues", userAI: "🎮 Ton IA :", emojiLabel: "Logo :",
+            scratchMode: "Griffure", realisticMode: "Réaliste", skinLabel: "🎨 Skin :",
+            uploadSkin: "📷 Télécharger", skinLoaded: "Skin chargée avec succès !",
+            skinCleared: "Skin supprimée", skinError: "Erreur de chargement",
+            skinTooBig: "Image trop grande (max 2Mo)",
+            placeholder: "Écrivez votre question...",
+            startBattle: "Commencer !", reset: "Réinitialiser",
+            addAI: "+ Ajouter mon IA", removeAI: "✕ Retirer", userName: "Nom",
+            losersPanel: "PERDANTS DU TOUR", scorePanel: "TABLEAU", historyPanel: "HISTORIQUE",
+            idle: "Les avatars patrouillent dans l'arène...",
+            phase1: "Phase 1 : Les avatars s'approchent...",
+            phase2: "Phase 2 : CHOC DES ÉPÉES !",
+            phase3: "Le combat est terminé !",
+            winner: "{name} a gagné ! Pire perdant : {worst}",
+            celebrating: "🏆 {name} célèbre ! Pire perdant : {worst}.",
+            alert: "Veuillez écrire une question.",
+            alertName: "Veuillez donner un nom à votre IA.",
+            alertEmoji: "Veuillez choisir un emoji ou télécharger une skin.",
+            round: "Tour", time: "Temps", phase: "Phase",
+            loading: "Chargement...", worstLabel: "💀 PIRE:",
+            userAdded: "Votre IA {name} a rejoint l'arène !",
+            scratchActivated: "🩸 MODE GRIFFURE ACTIVÉ !",
+            scratchDeactivated: "Mode Griffure désactivé.",
+            scratchCommentary: "🩸 GRIFFURE !",
+            realisticActivated: "🎬 MODE RÉALISTE ACTIVÉ !",
+            realisticDeactivated: "Mode Réaliste désactivé.",
+            realisticHit: "💥 IMPACT !",
+            realisticDeath: "💀 À TERRE !"
+        },
+        Deutsch: {
+            title: "BATTLE TEST", languages: "Sprachen", userAI: "🎮 Deine KI:", emojiLabel: "Logo:",
+            scratchMode: "Kratzer", realisticMode: "Realistisch", skinLabel: "🎨 Skin:",
+            uploadSkin: "📷 Hochladen", skinLoaded: "Skin erfolgreich geladen!",
+            skinCleared: "Skin entfernt", skinError: "Fehler beim Laden",
+            skinTooBig: "Bild zu groß (max 2MB)",
+            placeholder: "Schreibe deine Frage...",
+            startBattle: "Kampf starten!", reset: "Zurücksetzen",
+            addAI: "+ Meine KI hinzufügen", removeAI: "✕ Entfernen", userName: "Name",
+            losersPanel: "RUNDENVERLIERER", scorePanel: "PUNKTETAFEL", historyPanel: "VERLAUF",
+            idle: "Die Avatare patrouillieren...",
+            phase1: "Phase 1: Die Avatare nähern sich...",
+            phase2: "Phase 2: SCHWERTERKLIRREN!",
+            phase3: "Der Kampf ist vorbei!",
+            winner: "{name} hat gewonnen! Schlimmster Verlierer: {worst}",
+            celebrating: "🏆 {name} feiert! Schlimmster: {worst}.",
+            alert: "Bitte schreibe eine Frage.",
+            alertName: "Bitte gib deiner KI einen Namen.",
+            alertEmoji: "Bitte wähle ein Emoji oder lade einen Skin hoch.",
+            round: "Runde", time: "Zeit", phase: "Phase",
+            loading: "Laden...", worstLabel: "💀 SCHLIMMSTER:",
+            userAdded: "Deine KI {name} ist dabei!",
+            scratchActivated: "🩸 KRATZMODUS AN!",
+            scratchDeactivated: "Kratzmodus aus.",
+            scratchCommentary: "🩸 KRATZER!",
+            realisticActivated: "🎬 REALISTISCHER MODUS AN!",
+            realisticDeactivated: "Realistischer Modus aus.",
+            realisticHit: "💥 TREFFER!",
+            realisticDeath: "💀 GEFALLEN!"
+        },
+        Português: {
+            title: "BATTLE TEST", languages: "idiomas", userAI: "🎮 Sua IA:", emojiLabel: "Logo:",
+            scratchMode: "Arranhão", realisticMode: "Realista", skinLabel: "🎨 Skin:",
+            uploadSkin: "📷 Enviar", skinLoaded: "Skin carregada com sucesso!",
+            skinCleared: "Skin removida", skinError: "Erro ao carregar imagem",
+            skinTooBig: "Imagem muito grande (máx 2MB)",
+            placeholder: "Escreva sua pergunta...",
+            startBattle: "Iniciar Batalha!", reset: "Reiniciar",
+            addAI: "+ Adicionar minha IA", removeAI: "✕ Remover", userName: "Nome",
+            losersPanel: "PERDEDORES DA RODADA", scorePanel: "PLACAR", historyPanel: "HISTÓRICO",
+            idle: "Os avatares estão patrulhando...",
+            phase1: "Fase 1: Os avatares se aproximam...",
+            phase2: "Fase 2: CHOQUE DE ESPADAS!",
+            phase3: "A batalha acabou!",
+            winner: "{name} venceu! Pior perdedor: {worst}",
+            celebrating: "🏆 {name} comemora! Pior perdedor: {worst}.",
+            alert: "Por favor, escreva uma pergunta.",
+            alertName: "Por favor, dê um nome à sua IA.",
+            alertEmoji: "Por favor, escolha um emoji ou envie uma skin.",
+            round: "Rodada", time: "Tempo", phase: "Fase",
+            loading: "Carregando...", worstLabel: "💀 PIOR:",
+            userAdded: "Sua IA {name} entrou na arena!",
+            scratchActivated: "🩸 MODO ARRANHÃO ON!",
+            scratchDeactivated: "Modo Arranhão off.",
+            scratchCommentary: "🩸 ARRANHÃO!",
+            realisticActivated: "🎬 MODO REALISTA ON!",
+            realisticDeactivated: "Modo Realista off.",
+            realisticHit: "💥 IMPACTO!",
+            realisticDeath: "💀 CAÍDO!"
+        },
+        Italiano: {
+            title: "BATTLE TEST", languages: "lingue", userAI: "🎮 La tua IA:", emojiLabel: "Logo:",
+            scratchMode: "Graffio", realisticMode: "Realistico", skinLabel: "🎨 Skin:",
+            uploadSkin: "📷 Carica", skinLoaded: "Skin caricata con successo!",
+            skinCleared: "Skin rimossa", skinError: "Errore nel caricamento",
+            skinTooBig: "Immagine troppo grande (max 2MB)",
+            placeholder: "Scrivi la tua domanda...",
+            startBattle: "Inizia Battaglia!", reset: "Ricomincia",
+            addAI: "+ Aggiungi la mia IA", removeAI: "✕ Rimuovi", userName: "Nome",
+            losersPanel: "PERDENTI DEL TURNO", scorePanel: "CLASSIFICA", historyPanel: "CRONOLOGIA",
+            idle: "Gli avatar pattugliano...",
+            phase1: "Fase 1: Gli avatar si avvicinano...",
+            phase2: "Fase 2: SCONTRO DI SPADE!",
+            phase3: "La battaglia è finita!",
+            winner: "{name} ha vinto! Peggior: {worst}",
+            celebrating: "🏆 {name} festeggia! Peggior: {worst}.",
+            alert: "Per favore, scrivi una domanda.",
+            alertName: "Per favore, dai un nome alla tua IA.",
+            alertEmoji: "Per favore, scegli un emoji o carica una skin.",
+            round: "Turno", time: "Tempo", phase: "Fase",
+            loading: "Caricamento...", worstLabel: "💀 PEGGIORE:",
+            userAdded: "La tua IA {name} è nell'arena!",
+            scratchActivated: "🩸 MODALITÀ GRAFFIO ON!",
+            scratchDeactivated: "Modalità Graffio off.",
+            scratchCommentary: "🩸 GRAFFIO!",
+            realisticActivated: "🎬 MODALITÀ REALISTICA ON!",
+            realisticDeactivated: "Modalità Realistica off.",
+            realisticHit: "💥 IMPATTO!",
+            realisticDeath: "💀 A TERRA!"
+        }
+    };
+
+    let currentLang = 'Español';
+    function t(key) { return TRANSLATIONS[currentLang][key] || key; }
+
+    // ============ DATOS DE LOS MODOS ============
+    const MODE_DATA = {
+        ai: {
+            label: { Español: "🤖 Batalla IA (defecto)", English: "🤖 AI Battle (default)", Français: "🤖 Bataille IA (défaut)", Deutsch: "🤖 KI-Kampf (Standard)", Português: "🤖 Batalha IA (padrão)", Italiano: "🤖 Battaglia IA (predefinito)" },
+            participants: [
+                { name: "Claude", type: "flower" },
+                { name: "Gemini", type: "star" },
+                { name: "DeepSeek", type: "whale" },
+                { name: "Copilot", type: "shield" },
+                { name: "Grok", type: "abstract" },
+                { name: "Dola AI", type: "letter_d" },
+                { name: "ChatGPT", type: "knot" }
+            ]
+        },
+        browsers: {
+            label: { Español: "🌐 Batalla Navegadores", English: "🌐 Browser Battle", Français: "🌐 Bataille Navigateurs", Deutsch: "🌐 Browser-Kampf", Português: "🌐 Batalha Navegadores", Italiano: "🌐 Battaglia Browser" },
+            participants: [
+                { name: "Chrome", type: "browser", logo: "https://cdnjs.cloudflare.com/ajax/libs/browser-logos/75.0.1/chrome/chrome_256x256.png" },
+                { name: "Firefox", type: "browser", logo: "https://cdnjs.cloudflare.com/ajax/libs/browser-logos/75.0.1/firefox/firefox_256x256.png" },
+                { name: "Safari", type: "browser", logo: "https://cdnjs.cloudflare.com/ajax/libs/browser-logos/75.0.1/safari/safari_256x256.png" },
+                { name: "Edge", type: "browser", logo: "https://cdnjs.cloudflare.com/ajax/libs/browser-logos/75.0.1/edge/edge_256x256.png" },
+                { name: "Opera", type: "browser", logo: "https://cdnjs.cloudflare.com/ajax/libs/browser-logos/75.0.1/opera/opera_256x256.png" },
+                { name: "Brave", type: "browser", logo: "https://cdnjs.cloudflare.com/ajax/libs/browser-logos/75.0.1/brave/brave_256x256.png" },
+                { name: "Vivaldi", type: "browser", logo: "https://cdnjs.cloudflare.com/ajax/libs/browser-logos/75.0.1/vivaldi/vivaldi_256x256.png" }
+            ]
+        },
+        langs: {
+            label: { Español: "💻 Batalla Lenguajes", English: "💻 Language Battle", Français: "💻 Bataille Langages", Deutsch: "💻 Sprachkampf", Português: "💻 Batalha Linguagens", Italiano: "💻 Battaglia Linguaggi" },
+            participants: [
+                { name: "Python", type: "lang", logo: "https://cdn.jsdelivr.net/npm/programming-languages-logos/src/python/python.png" },
+                { name: "JavaScript", type: "lang", logo: "https://cdn.jsdelivr.net/npm/programming-languages-logos/src/javascript/javascript.png" },
+                { name: "Java", type: "lang", logo: "https://cdn.jsdelivr.net/npm/programming-languages-logos/src/java/java.png" },
+                { name: "C++", type: "lang", logo: "https://cdn.jsdelivr.net/npm/programming-languages-logos/src/cpp/cpp.png" },
+                { name: "Rust", type: "lang", logo: "https://cdn.jsdelivr.net/npm/programming-languages-logos/src/rust/rust.png" },
+                { name: "Go", type: "lang", logo: "https://cdn.jsdelivr.net/npm/programming-languages-logos/src/go/go.png" },
+                { name: "TypeScript", type: "lang", logo: "https://cdn.jsdelivr.net/npm/programming-languages-logos/src/typescript/typescript.png" }
+            ]
+        }
+    };
+
+    // ============ ESTADO GLOBAL ============
+    let currentMode = 'ai';
+    let userAIConfig = null;
+    let customSkinImage = null;
+    let customSkinDataURL = null;
+    let avatares = [];
+    let banca = [];
+    let gameState = 'idle';
+    let fightPhase = 'idle';
+    let ganadorActual = null;
+    let peorPerdedor = null;
+    let animationId;
+    let time = 0;
+    let particles = [];
+    let floatingTexts = [];
+    let confetti = [];
+    let roundNumber = 0;
+    let paused = false;
+    let soundEnabled = true;
+    let scoreStats = {};
+    let timers = [];
+    let groundImpactHappened = false;
+    let scratchModeEnabled = false;
+    let realisticModeEnabled = false;
+    let bloodPools = [];
+    let bloodStains = [];
+    const MAX_SCRATCHES = 15;
+    const ARENA_GROUND_Y = 400;
+    const loadedImages = {};
+
+    // ============ DOM ============
+    const canvas = document.getElementById('arena');
+    const ctx = canvas.getContext('2d');
+    const btnPelear = document.getElementById('btn-pelear');
+    const btnReiniciar = document.getElementById('btn-reiniciar');
+    const btnPausa = document.getElementById('btn-pausa');
+    const btnSound = document.getElementById('btn-sound');
+    const btnTheme = document.getElementById('btn-theme');
+    const btnAddAI = document.getElementById('btn-add-ai');
+    const btnRemoveAI = document.getElementById('btn-remove-ai');
+    const btnRandomEmoji = document.getElementById('btn-random-emoji');
+    const btnScratchMode = document.getElementById('btn-scratch-mode');
+    const btnRealisticMode = document.getElementById('btn-realistic-mode');
+    const lblScratchMode = document.getElementById('lbl-scratch-mode');
+    const lblRealisticMode = document.getElementById('lbl-realistic-mode');
+    const lblSkin = document.getElementById('lbl-skin');
+    const btnUploadSkin = document.getElementById('btn-upload-skin');
+    const btnClearSkin = document.getElementById('btn-clear-skin');
+    const fileSkin = document.getElementById('file-skin');
+    const skinPreview = document.getElementById('skin-preview');
+    const skinToast = document.getElementById('skin-toast');
+    const skinToastText = document.getElementById('skin-toast-text');
+    const userBadge = document.getElementById('user-badge');
+    const userInput = document.getElementById('user-name');
+    const userEmojiInput = document.getElementById('user-emoji-input');
+    const emojiPreview = document.getElementById('emoji-preview');
+    const quickpick = document.getElementById('quickpick');
+    const inputPregunta = document.getElementById('pregunta-input');
+    const statusText = document.getElementById('status-text');
+    const listaBanca = document.getElementById('lista-banca');
+    const listaScore = document.getElementById('lista-score');
+    const listaHistory = document.getElementById('lista-history');
+    const canvasContainer = document.getElementById('canvas-container');
+    const idiomaSelect = document.getElementById('idioma-select');
+    const modeSelect = document.getElementById('mode-select');
+    const roundCounter = document.getElementById('round-counter');
+    const timerDisplay = document.getElementById('timer-display');
+    const phaseDisplay = document.getElementById('phase-display');
+    const progressBar = document.getElementById('progress-bar');
+    const commentaryEl = document.getElementById('commentary');
+    const loadingScreen = document.getElementById('loading-screen');
+
+    const RANDOM_EMOJIS = [
+        "🤖","👾","🐱","🐶","🦊","🐉","🦁","🦉","🐺","🦅","🐼","🦄","🐸","🐙","🦖",
+        "⭐","🔥","💎","👑","🚀","⚡","🎯","🌟","💥","🌈","🎮","🎨","🧠","👽","🤡",
+        "🍕","🍩","🎸","🎧","⚔️","🛡️","🏆","💀","🌙","☀️","❄️","🌊","🌪️","🍀","🎃"
+    ];
+
+    // ============ AUDIO ============
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+        if (!soundEnabled) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        if (type === 'swing') { osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(180, audioCtx.currentTime + 0.15); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15); osc.start(); osc.stop(audioCtx.currentTime + 0.15); }
+        else if (type === 'clash') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(250, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.15); gain.gain.setValueAtTime(0.15, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15); osc.start(); osc.stop(audioCtx.currentTime + 0.15); }
+        else if (type === 'scratch') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(1200, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.12); gain.gain.setValueAtTime(0.12, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12); osc.start(); osc.stop(audioCtx.currentTime + 0.12); }
+        else if (type === 'fleshhit') { osc.type = 'triangle'; osc.frequency.setValueAtTime(180, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.2); gain.gain.setValueAtTime(0.25, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2); osc.start(); osc.stop(audioCtx.currentTime + 0.2); }
+        else if (type === 'agony') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(700, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.6); gain.gain.setValueAtTime(0.08, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6); osc.start(); osc.stop(audioCtx.currentTime + 0.6); }
+        else if (type === 'death') { osc.type = 'triangle'; osc.frequency.setValueAtTime(90, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 1.0); gain.gain.setValueAtTime(0.35, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.0); osc.start(); osc.stop(audioCtx.currentTime + 1.0); }
+        else if (type === 'victory') { osc.type = 'sine'; [400, 600, 800, 1000].forEach((f, i) => { osc.frequency.setValueAtTime(f, audioCtx.currentTime + i * 0.1); }); gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6); osc.start(); osc.stop(audioCtx.currentTime + 0.6); }
+        else if (type === 'defeat') { osc.type = 'square'; osc.frequency.setValueAtTime(200, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.4); gain.gain.setValueAtTime(0.15, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4); osc.start(); osc.stop(audioCtx.currentTime + 0.4); }
+        else if (type === 'thud') { osc.type = 'triangle'; osc.frequency.setValueAtTime(120, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.5); gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5); osc.start(); osc.stop(audioCtx.currentTime + 0.5); }
+        else if (type === 'click') { osc.type = 'sine'; osc.frequency.setValueAtTime(800, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05); osc.start(); osc.stop(audioCtx.currentTime + 0.05); }
+    }
+
+    // ============ CARGA DE IMÁGENES ============
+    function preloadImages() {
+        return new Promise((resolve) => {
+            const allUrls = [];
+            Object.values(MODE_DATA.ai.participants).forEach(p => { if (p.logo) allUrls.push({ key: p.name, url: p.logo }); });
+            Object.values(MODE_DATA.browsers.participants).forEach(p => { if (p.logo) allUrls.push({ key: p.name, url: p.logo }); });
+            Object.values(MODE_DATA.langs.participants).forEach(p => { if (p.logo) allUrls.push({ key: p.name, url: p.logo }); });
+            const aiFallbacks = {
+                Claude: "https://raw.githubusercontent.com/lobehub/lobe-icons/master/packages/static-png/dark/claude.png",
+                Gemini: "https://raw.githubusercontent.com/lobehub/lobe-icons/master/packages/static-png/dark/gemini.png",
+                DeepSeek: "https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/deepseek-color.svg",
+                Copilot: "https://raw.githubusercontent.com/lobehub/lobe-icons/master/packages/static-png/dark/copilot.png",
+                Grok: "https://raw.githubusercontent.com/lobehub/lobe-icons/master/packages/static-png/dark/grok.png",
+                Dola: "https://svgicons.com/img/211274/dola.svg",
+                ChatGPT: "https://raw.githubusercontent.com/lobehub/lobe-icons/master/packages/static-png/dark/openai.png"
+            };
+            Object.entries(aiFallbacks).forEach(([key, url]) => { allUrls.push({ key, url }); });
+
+            let loadedCount = 0;
+            const total = allUrls.length;
+            allUrls.forEach(({ key, url }) => {
+                const img = new Image();
+                img.crossOrigin = "Anonymous";
+                img.src = url;
+                img.onload = () => { loadedImages[key] = img; loadedCount++; if (loadedCount === total) resolve(); };
+                img.onerror = () => { console.warn(`Fallo: ${key}`); loadedCount++; if (loadedCount === total) resolve(); };
+            });
+        });
+    }
+
+    // ============ TRADUCCIÓN ============
+    function applyTranslation() {
+        document.getElementById('main-title').innerText = t('title');
+        document.getElementById('lbl-idiomas').innerText = t('languages');
+        document.getElementById('lbl-user-ai').innerText = t('userAI');
+        document.getElementById('lbl-emoji').innerText = t('emojiLabel');
+        lblScratchMode.innerText = t('scratchMode');
+        lblRealisticMode.innerText = t('realisticMode');
+        lblSkin.innerText = t('skinLabel');
+        btnUploadSkin.innerText = t('uploadSkin');
+        inputPregunta.placeholder = t('placeholder');
+        btnPelear.innerText = t('startBattle');
+        btnReiniciar.innerText = t('reset');
+        btnAddAI.innerText = t('addAI');
+        btnRemoveAI.innerText = t('removeAI');
+        userInput.placeholder = t('userName');
+        document.getElementById('lbl-losers').innerText = t('losersPanel');
+        document.getElementById('lbl-score').innerText = t('scorePanel');
+        document.getElementById('lbl-history').innerText = t('historyPanel');
+        document.getElementById('lbl-round').innerText = t('round');
+        document.getElementById('lbl-time').innerText = t('time');
+        document.getElementById('lbl-fase').innerText = t('phase');
+        document.getElementById('loading-text').innerText = t('loading');
+        if (gameState === 'idle' && !ganadorActual) statusText.innerText = t('idle');
+        updateUserBadge();
+        updateModeSelectLabels();
+    }
+
+    // 🐛 BUG CORREGIDO: ahora actualiza TODAS las opciones con sus propios nombres
+    function updateModeSelectLabels() {
+        const lang = currentLang;
+        modeSelect.options[0].text = MODE_DATA.ai.label[lang] || MODE_DATA.ai.label.Español;
+        modeSelect.options[1].text = MODE_DATA.browsers.label[lang] || MODE_DATA.browsers.label.Español;
+        modeSelect.options[2].text = MODE_DATA.langs.label[lang] || MODE_DATA.langs.label.Español;
+    }
+
+    // ============ CAMBIO DE MODO ============
+    modeSelect.addEventListener('change', (e) => {
+        if (gameState === 'fighting') { e.target.value = currentMode; return; }
+        currentMode = e.target.value;
+        playSound('click');
+        updateModeSelectLabels();
+        reiniciarJuego();
+        statusText.innerText = `Modo: ${MODE_DATA[currentMode].label[currentLang] || MODE_DATA[currentMode].label.Español}`;
+    });
+
+    // ============ EDITOR DE SKINS ============
+    function showSkinToast(msg) { skinToastText.innerText = msg; skinToast.classList.add('visible'); setTimeout(() => skinToast.classList.remove('visible'), 2500); }
+    function handleSkinFile(file) {
+        if (!file || !file.type.startsWith('image/')) { showSkinToast(t('skinError')); return; }
+        if (file.size > 2 * 1024 * 1024) { showSkinToast(t('skinTooBig')); return; }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const dataURL = e.target.result;
+            const img = new Image();
+            img.onload = () => {
+                customSkinImage = img; customSkinDataURL = dataURL;
+                skinPreview.innerHTML = `<img src="${dataURL}" alt="skin">`;
+                skinPreview.classList.add('has-image'); btnClearSkin.classList.add('visible');
+                showSkinToast(t('skinLoaded')); playSound('victory');
+                if (userAIConfig) initAvatares();
+            };
+            img.onerror = () => { showSkinToast(t('skinError')); };
+            img.src = dataURL;
+        };
+        reader.readAsDataURL(file);
+    }
+    btnUploadSkin.addEventListener('click', () => { playSound('click'); fileSkin.click(); });
+    skinPreview.addEventListener('click', () => { playSound('click'); fileSkin.click(); });
+    fileSkin.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) handleSkinFile(file); fileSkin.value = ''; });
+    btnClearSkin.addEventListener('click', (e) => {
+        e.stopPropagation();
+        customSkinImage = null; customSkinDataURL = null;
+        skinPreview.innerHTML = ''; skinPreview.classList.remove('has-image');
+        skinPreview.setAttribute('data-label', '?'); btnClearSkin.classList.remove('visible');
+        showSkinToast(t('skinCleared')); playSound('click');
+        if (userAIConfig) initAvatares();
+    });
+    ['dragenter', 'dragover'].forEach(evt => { skinPreview.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); skinPreview.classList.add('dragover'); }); });
+    ['dragleave', 'drop'].forEach(evt => { skinPreview.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); skinPreview.classList.remove('dragover'); }); });
+    skinPreview.addEventListener('drop', (e) => { const file = e.dataTransfer.files[0]; if (file) handleSkinFile(file); });
+
+    // ============ MODO RASGUÑO ============
+    btnScratchMode.addEventListener('click', () => {
+        scratchModeEnabled = !scratchModeEnabled;
+        btnScratchMode.classList.toggle('active', scratchModeEnabled);
+        playSound('click');
+        if (scratchModeEnabled) showCommentary(t('scratchActivated'), 'scratch');
+        else { showCommentary(t('scratchDeactivated')); avatares.forEach(ai => { ai.scratches = []; }); }
+    });
+
+    // ============ MODO REALISTA ============
+    btnRealisticMode.addEventListener('click', () => {
+        realisticModeEnabled = !realisticModeEnabled;
+        btnRealisticMode.classList.toggle('active', realisticModeEnabled);
+        playSound('click');
+        if (realisticModeEnabled) showCommentary(t('realisticActivated'), 'realistic');
+        else { showCommentary(t('realisticDeactivated')); bloodPools = []; bloodStains = []; avatares.forEach(ai => { ai.isRealisticDead = false; ai.deathAnimProgress = 0; }); }
+    });
+
+    // ============ EMOJI ============
+    userEmojiInput.addEventListener('input', () => { const val = userEmojiInput.value.trim(); if (val) { emojiPreview.innerText = val; emojiPreview.style.opacity = '1'; } else { emojiPreview.innerText = '?'; emojiPreview.style.opacity = '0.3'; } });
+    quickpick.addEventListener('click', (e) => { if (e.target.tagName === 'BUTTON') { const emoji = e.target.getAttribute('data-emoji'); userEmojiInput.value = emoji; emojiPreview.innerText = emoji; emojiPreview.style.opacity = '1'; playSound('click'); } });
+    btnRandomEmoji.addEventListener('click', () => { const emoji = RANDOM_EMOJIS[Math.floor(Math.random() * RANDOM_EMOJIS.length)]; userEmojiInput.value = emoji; emojiPreview.innerText = emoji; emojiPreview.style.opacity = '1'; playSound('click'); });
+
+    // ============ BADGE USUARIO ============
+    function updateUserBadge() {
+        if (userAIConfig) {
+            let inner = customSkinDataURL ? `<img src="${customSkinDataURL}" alt="skin"> ${userAIConfig.name}` : `${userAIConfig.emoji} ${userAIConfig.name}`;
+            userBadge.innerHTML = inner; userBadge.classList.add('visible');
+            btnRemoveAI.style.display = 'inline-block'; btnAddAI.style.display = 'none';
+        } else {
+            userBadge.classList.remove('visible'); btnRemoveAI.style.display = 'none'; btnAddAI.style.display = 'inline-block';
+        }
+    }
+
+    // ============ TEMAS Y SONIDO ============
+    btnTheme.addEventListener('click', () => { document.body.classList.toggle('dark'); btnTheme.innerText = document.body.classList.contains('dark') ? '☀️' : '🌙'; playSound('click'); });
+    btnSound.addEventListener('click', () => { soundEnabled = !soundEnabled; btnSound.innerText = soundEnabled ? '🔊' : '🔇'; btnSound.classList.toggle('active', !soundEnabled); });
+
+    // ============ AÑADIR / QUITAR IA USUARIO ============
+    btnAddAI.addEventListener('click', () => {
+        const name = userInput.value.trim(); const emoji = userEmojiInput.value.trim();
+        if (!name) { alert(t('alertName')); return; }
+        if (!emoji && !customSkinDataURL) { alert(t('alertEmoji')); return; }
+        userAIConfig = { name: name.substring(0, 12), emoji: emoji || '🎨', hasSkin: !!customSkinDataURL };
+        playSound('click'); updateUserBadge(); initAvatares(); initScoreboard();
+        statusText.innerText = t('userAdded').replace('{name}', userAIConfig.name);
+    });
+    btnRemoveAI.addEventListener('click', () => { userAIConfig = null; playSound('click'); updateUserBadge(); initAvatares(); initScoreboard(); });
+
+    // ============ INICIALIZAR AVATARES ============
+    function initAvatares() {
+        avatares = []; banca = []; ganadorActual = null; peorPerdedor = null;
+        listaBanca.innerHTML = ''; particles = []; floatingTexts = []; confetti = [];
+        bloodPools = []; bloodStains = [];
+
+        const modeParticipants = MODE_DATA[currentMode].participants;
+        const allIAs = [...modeParticipants];
+        if (userAIConfig) {
+            allIAs.push({ name: userAIConfig.name, type: 'user', emoji: userAIConfig.emoji, isUser: true, hasSkin: userAIConfig.hasSkin });
+        }
+
+        const posiciones = allIAs.length === 8 ? [
+            {x: 90, y: 100}, {x: 220, y: 100}, {x: 350, y: 100},
+            {x: 480, y: 100}, {x: 610, y: 100}, {x: 740, y: 100},
+            {x: 200, y: 330}, {x: 650, y: 330}
+        ] : [
+            {x: 100, y: 110}, {x: 240, y: 110}, {x: 380, y: 110},
+            {x: 520, y: 110}, {x: 660, y: 110}, {x: 800, y: 110},
+            {x: 200, y: 350}
+        ];
+
+        allIAs.forEach((ia, index) => {
+            avatares.push({
+                name: ia.name, type: ia.type, emoji: ia.emoji, isUser: ia.isUser,
+                hasSkin: ia.hasSkin, logoUrl: ia.logo || null,
+                x: posiciones[index].x, y: posiciones[index].y,
+                homeX: posiciones[index].x, homeY: posiciones[index].y,
+                dx: (Math.random() > 0.5 ? 1 : -1) * 1.5, dy: (Math.random() > 0.5 ? 1 : -1) * 1.5,
+                isDefeated: false, isRetreating: false, flashRed: false,
+                isWorstLoser: false, fallProgress: 0,
+                targetX: null, targetY: null, bounceOffset: 0,
+                hp: 100, swingAngle: 0,
+                attackAnimActive: false, attackAnimTimer: 0, swingProgress: 0,
+                scratches: [], hitFlash: 0, hitShakeX: 0, hitShakeY: 0,
+                isRealisticDead: false, deathAnimProgress: 0,
+                twitchTimer: 0, twitchOffset: 0, paleProgress: 0
+            });
+        });
+        updateScoreboard();
+    }
+
+    // ============ SCOREBOARD ============
+    function initScoreboard() {
+        scoreStats = {};
+        MODE_DATA[currentMode].participants.forEach(ia => { scoreStats[ia.name] = { wins: 0, losses: 0 }; });
+        if (userAIConfig) scoreStats[userAIConfig.name] = { wins: 0, losses: 0 };
+        updateScoreboard();
+    }
+    function updateScoreboard() {
+        listaScore.innerHTML = '';
+        Object.entries(scoreStats).forEach(([name, stats]) => {
+            const li = document.createElement('li');
+            if (userAIConfig && name === userAIConfig.name) li.classList.add('user-item');
+            const wL = currentLang === 'English' ? 'W' : (currentLang === 'Deutsch' ? 'S' : 'V');
+            const lL = currentLang === 'English' ? 'L' : (currentLang === 'Deutsch' ? 'N' : 'D');
+            let emojiPrefix = '';
+            if (userAIConfig && name === userAIConfig.name) { emojiPrefix = customSkinDataURL ? '🎨 ' : userAIConfig.emoji + ' '; }
+            li.innerHTML = `<span>${emojiPrefix}${name}</span><span>${wL}:${stats.wins} ${lL}:${stats.losses}</span>`;
+            listaScore.appendChild(li);
+        });
+    }
+
+    // ============ DIBUJAR AVATAR ============
+    function drawAvatar(ai) {
+        ctx.save();
+        const shakeX = ai.hitShakeX || 0; const shakeY = ai.hitShakeY || 0; const twitch = ai.twitchOffset || 0;
+        ctx.translate(ai.x + shakeX + twitch, ai.y + ai.bounceOffset + shakeY);
+        if (ai.isWorstLoser && ai.fallProgress > 0) {
+            let grayPct, brightPct;
+            if (realisticModeEnabled) { grayPct = Math.min(85, ai.fallProgress * 85 + (ai.paleProgress || 0) * 30); brightPct = 100 - ai.fallProgress * 45 - (ai.paleProgress || 0) * 15; }
+            else { grayPct = ai.fallProgress * 100; brightPct = 100 - ai.fallProgress * 55; }
+            ctx.filter = `grayscale(${grayPct}%) brightness(${brightPct}%) contrast(1.15) saturate(${realisticModeEnabled ? 0.4 : 1})`;
+            const angle = ai.fallProgress * (Math.PI / 2) * 0.95;
+            ctx.translate(0, 45); ctx.rotate(angle); ctx.translate(0, -45);
+        }
+        if (ganadorActual === ai && gameState === 'idle') {
+            const auraGrad = ctx.createRadialGradient(0, 0, 10, 0, 0, 70);
+            auraGrad.addColorStop(0, 'rgba(255, 215, 0, 0.6)'); auraGrad.addColorStop(1, 'rgba(255, 215, 0, 0)');
+            ctx.fillStyle = auraGrad; ctx.beginPath(); ctx.arc(0, 0, 70, 0, Math.PI * 2); ctx.fill();
+        }
+        if (ai.isDefeated && !ai.isWorstLoser && gameState === 'fighting' && fightPhase === 'retreat') {
+            const pulse = (Math.sin(Date.now() / 200) + 1) / 2;
+            const auraGrad = ctx.createRadialGradient(0, 0, 10, 0, 0, 60);
+            auraGrad.addColorStop(0, `rgba(255, 0, 0, ${0.3 + pulse * 0.4})`); auraGrad.addColorStop(1, 'rgba(255, 0, 0, 0)');
+            ctx.fillStyle = auraGrad; ctx.beginPath(); ctx.arc(0, 0, 60, 0, Math.PI * 2); ctx.fill();
+        }
+        if (!(ai.isWorstLoser && ai.fallProgress >= 1)) { ctx.beginPath(); ctx.ellipse(0, 55, 35, 10, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fill(); }
+
+        drawSword(ai);
+
+        if (ai.isUser && ai.hasSkin && customSkinImage) {
+            ctx.save(); ctx.beginPath(); ctx.arc(0, -5, 32, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+            const img = customSkinImage; const maxSize = 64; const ratio = img.naturalWidth / img.naturalHeight;
+            let w, h; if (ratio > 1) { h = maxSize; w = maxSize * ratio; } else { w = maxSize; h = maxSize / ratio; }
+            ctx.drawImage(img, -w/2, -5 - h/2, w, h); ctx.restore();
+            ctx.beginPath(); ctx.arc(0, -5, 32, 0, Math.PI * 2); ctx.strokeStyle = '#4B0082'; ctx.lineWidth = 3; ctx.stroke();
+        } else if (ai.type === 'user' && ai.emoji) {
+            ctx.save(); const emojiLen = [...ai.emoji].length; const fontSize = emojiLen > 1 ? 40 : 52;
+            ctx.font = fontSize + 'px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", Arial';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(ai.emoji, 0, -5); ctx.restore();
+        } else if (loadedImages[ai.name]) {
+            const img = loadedImages[ai.name];
+            const maxSize = 60; let w = img.naturalWidth, h = img.naturalHeight;
+            const scale = Math.min(maxSize / w, maxSize / h); w *= scale; h *= scale;
+            ctx.drawImage(img, -w/2, -h/2, w, h);
+        } else {
+            drawFallbackLogo(ai);
+        }
+
+        drawScratches(ai);
+        if (realisticModeEnabled && ai.hitFlash > 0) { ctx.save(); ctx.globalAlpha = ai.hitFlash; ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.beginPath(); ctx.arc(0, 0, 42, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+        if (ai.isDefeated && !ai.isWorstLoser && ai.flashRed) { ctx.save(); ctx.globalAlpha = Math.abs(Math.sin(Date.now() / 100)) * 0.7; ctx.fillStyle = "red"; ctx.beginPath(); ctx.arc(0, 0, 45, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+
+        ctx.beginPath(); ctx.moveTo(-45, -5); ctx.quadraticCurveTo(0, -65, 45, -5); ctx.lineTo(35, -5); ctx.quadraticCurveTo(0, -45, -35, -5); ctx.closePath();
+        ctx.fillStyle = ai.isWorstLoser && ai.fallProgress > 0.3 ? '#404040' : '#808080'; ctx.fill(); ctx.strokeStyle = 'black'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-25, -15); ctx.lineTo(25, -15); ctx.strokeStyle = '#333'; ctx.lineWidth = 4; ctx.stroke();
+
+        if (realisticModeEnabled && ai.hp < 60) { ctx.save(); ctx.fillStyle = 'rgba(139,0,0,0.6)'; const bleedIntensity = (60 - ai.hp) / 60; ctx.beginPath(); ctx.ellipse(-20, -5, 8 * bleedIntensity, 4 * bleedIntensity, 0.3, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(15, -10, 6 * bleedIntensity, 3 * bleedIntensity, -0.2, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+
+        if (ai.isUser && !(ai.isWorstLoser && ai.fallProgress >= 1)) { ctx.fillStyle = '#9370DB'; ctx.strokeStyle = '#4B0082'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-22, -55); ctx.lineTo(-18, -72); ctx.lineTo(-9, -60); ctx.lineTo(0, -75); ctx.lineTo(9, -60); ctx.lineTo(18, -72); ctx.lineTo(22, -55); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+        if (ganadorActual === ai && gameState === 'idle') { ctx.fillStyle = 'gold'; ctx.strokeStyle = '#B8860B'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-25, -55); ctx.lineTo(-20, -75); ctx.lineTo(-10, -60); ctx.lineTo(0, -80); ctx.lineTo(10, -60); ctx.lineTo(20, -75); ctx.lineTo(25, -55); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+
+        if (gameState === 'fighting' && !ai.isWorstLoser) {
+            ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(-35, -85, 70, 6);
+            const hpColor = ai.hp > 50 ? '#32CD32' : (ai.hp > 25 ? '#FFD700' : '#DC143C');
+            ctx.fillStyle = hpColor; ctx.fillRect(-34, -84, 68 * (ai.hp / 100), 4);
+            if (realisticModeEnabled && ai.hp < 25) { ctx.strokeStyle = `rgba(255,0,0,${0.5 + Math.sin(Date.now()/100)*0.5})`; ctx.lineWidth = 2; ctx.strokeRect(-36, -86, 72, 8); }
+        }
+
+        if (!(ai.isWorstLoser && ai.fallProgress > 0.5)) {
+            ctx.fillStyle = ai.isWorstLoser ? '#555' : (ai.isUser ? '#4B0082' : 'black');
+            ctx.font = 'bold ' + (ai.isUser ? '15px' : '14px') + ' Arial';
+            ctx.textAlign = 'center'; ctx.fillText(ai.name, 0, 75);
+        } else { ctx.fillStyle = '#444'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center'; ctx.fillText("💀 " + ai.name, 0, 75); }
+
+        ctx.restore();
+
+        if (ai.isWorstLoser && ai.fallProgress > 0.7) {
+            ctx.save(); ctx.translate(ai.x + shakeX + twitch, ai.y + ai.bounceOffset + shakeY);
+            const angle = ai.fallProgress * (Math.PI / 2) * 0.95;
+            ctx.translate(0, 45); ctx.rotate(angle); ctx.translate(0, -45);
+            ctx.strokeStyle = realisticModeEnabled ? '#000' : '#333'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(-14, -12); ctx.lineTo(-6, -4); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(-6, -12); ctx.lineTo(-14, -4); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(6, -12); ctx.lineTo(14, -4); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(14, -12); ctx.lineTo(6, -4); ctx.stroke();
+            ctx.restore();
+        }
+    }
+
+    // ============ FALLBACK LOGO ============
+    function drawFallbackLogo(ai) {
+        if (ai.type === "flower") { ctx.fillStyle = "#D97757"; for (let i = 0; i < 6; i++) { ctx.rotate(Math.PI / 3); ctx.beginPath(); ctx.ellipse(0, -15, 8, 18, 0, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = 'black'; ctx.stroke(); } ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fillStyle = "white"; ctx.fill(); ctx.stroke(); }
+        else if (ai.type === "star") { ctx.beginPath(); ctx.moveTo(0, -35); ctx.lineTo(10, -10); ctx.lineTo(35, 0); ctx.lineTo(10, 10); ctx.lineTo(0, 35); ctx.lineTo(-10, 10); ctx.lineTo(-35, 0); ctx.lineTo(-10, -10); ctx.closePath(); ctx.fillStyle = "#4285F4"; ctx.fill(); ctx.strokeStyle = 'black'; ctx.stroke(); ctx.beginPath(); ctx.arc(0, -20, 6, 0, Math.PI*2); ctx.fillStyle = "#EA4335"; ctx.fill(); ctx.beginPath(); ctx.arc(20, 0, 6, 0, Math.PI*2); ctx.fillStyle = "#FBBC05"; ctx.fill(); ctx.beginPath(); ctx.arc(-20, 0, 6, 0, Math.PI*2); ctx.fillStyle = "#34A853"; ctx.fill(); }
+        else if (ai.type === "whale") { ctx.beginPath(); ctx.ellipse(0, 0, 35, 25, 0, 0, Math.PI * 2); ctx.fillStyle = "#1A56DB"; ctx.fill(); ctx.strokeStyle = 'black'; ctx.stroke(); ctx.beginPath(); ctx.moveTo(15, -10); ctx.lineTo(35, -25); ctx.lineTo(25, 0); ctx.fillStyle = "#1A56DB"; ctx.fill(); ctx.stroke(); }
+        else if (ai.type === "shield") { ctx.beginPath(); ctx.moveTo(0,-35); ctx.lineTo(35,-20); ctx.lineTo(35,10); ctx.quadraticCurveTo(35,35, 0,45); ctx.quadraticCurveTo(-35,35,-35,10); ctx.lineTo(-35,-20); ctx.closePath(); ctx.fillStyle = "#0078D4"; ctx.fill(); ctx.strokeStyle = 'black'; ctx.lineWidth = 3; ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI*2); ctx.fillStyle = "#FF69B4"; ctx.fill(); ctx.beginPath(); ctx.arc(5, 5, 15, 0, Math.PI*2); ctx.fillStyle = "#32CD32"; ctx.fill(); ctx.beginPath(); ctx.arc(-5, -5, 10, 0, Math.PI*2); ctx.fillStyle = "#FBBC05"; ctx.fill(); }
+        else if (ai.type === "abstract") { ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI * 2); ctx.fillStyle = '#000000'; ctx.fill(); ctx.strokeStyle = 'white'; ctx.lineWidth = 3; ctx.stroke(); ctx.beginPath(); ctx.moveTo(-20, 0); ctx.lineTo(20, 0); ctx.strokeStyle = 'white'; ctx.lineWidth = 4; ctx.stroke(); }
+        else if (ai.type === "letter_d") { const dGrad = ctx.createLinearGradient(-20, -20, 20, 20); dGrad.addColorStop(0, "#DDA0DD"); dGrad.addColorStop(1, "#4B0082"); ctx.beginPath(); ctx.moveTo(-20, -25); ctx.lineTo(5, -25); ctx.arc(5, 0, 25, -Math.PI / 2, Math.PI / 2); ctx.lineTo(-20, 25); ctx.strokeStyle = 'black'; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(); ctx.strokeStyle = dGrad; ctx.lineWidth = 10; ctx.stroke(); }
+        else if (ai.type === "knot") { ctx.beginPath(); for(let i=0; i<6; i++){ let angle = i * Math.PI / 3; let x = Math.cos(angle) * 30, y = Math.sin(angle) * 30; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); } ctx.closePath(); ctx.fillStyle = "#10A37F"; ctx.fill(); ctx.strokeStyle = "black"; ctx.lineWidth = 3; ctx.stroke(); ctx.beginPath(); for(let i=0; i<6; i++){ let angle = i * Math.PI / 3; let x = Math.cos(angle) * 30, y = Math.sin(angle) * 30; ctx.moveTo(0,0); ctx.lineTo(x,y); } ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.stroke(); }
+        else { ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI * 2); ctx.fillStyle = '#888'; ctx.fill(); ctx.strokeStyle = 'black'; ctx.lineWidth = 3; ctx.stroke(); }
+    }
+
+    // ============ ESPADA ============
+    function drawSword(ai) {
+        const t_swing = ai.swingProgress;
+        const canvasCenterX = canvas.width / 2;
+        const side = (ai.homeX || ai.x) < canvasCenterX ? 1 : -1;
+        const pivotX = 60 * side; const pivotY = 0;
+        const baseAngle = -0.7 + t_swing * 0.9; const angle = baseAngle * side;
+        const curveX = Math.sin(t_swing * Math.PI) * 6 * side; const curveY = -Math.sin(t_swing * Math.PI) * 3;
+
+        if (ai.attackAnimActive && t_swing > 0.05 && t_swing < 0.95) {
+            for (let i = 3; i >= 1; i--) {
+                const prevT = Math.max(0, t_swing - i * 0.1);
+                const prevBase = -0.7 + prevT * 0.9; const prevAngle = prevBase * side;
+                const prevCurveX = Math.sin(prevT * Math.PI) * 6 * side; const prevCurveY = -Math.sin(prevT * Math.PI) * 3;
+                ctx.save(); ctx.translate(pivotX + prevCurveX, pivotY + prevCurveY); ctx.rotate(prevAngle);
+                ctx.globalAlpha = (0.35 - i * 0.08); ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(0, 30);
+                ctx.strokeStyle = realisticModeEnabled ? '#FF0000' : '#FFD700'; ctx.lineWidth = 5; ctx.stroke(); ctx.restore();
+            }
+        }
+
+        ctx.save(); ctx.translate(pivotX + curveX, pivotY + curveY); ctx.rotate(angle);
+        ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(0, 30); ctx.strokeStyle = realisticModeEnabled ? '#C0C0C0' : '#B0C4DE'; ctx.lineWidth = 6; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-2, -10); ctx.lineTo(-2, 25); ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke();
+        if (realisticModeEnabled && ai.hp < 70) { ctx.beginPath(); ctx.moveTo(-1, 10); ctx.lineTo(1, 25); ctx.strokeStyle = 'rgba(139,0,0,0.7)'; ctx.lineWidth = 3; ctx.stroke(); }
+        ctx.beginPath(); ctx.arc(0, 40, 8, 0, Math.PI * 2); ctx.fillStyle = '#A0522D'; ctx.fill(); ctx.strokeStyle = 'black'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-6, 2); ctx.lineTo(6, 2); ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 3; ctx.stroke();
+        ctx.restore();
+    }
+
+    // ============ RASGUÑOS ============
+    function addScratch(ai) {
+        if (!scratchModeEnabled) return; if (ai.scratches.length >= MAX_SCRATCHES) return;
+        const angle = Math.random() * Math.PI * 2; const offsetX = (Math.random() - 0.5) * 40; const offsetY = (Math.random() - 0.5) * 40;
+        const size = 12 + Math.random() * 12; const thickness = 1.5 + Math.random() * 1.5;
+        ai.scratches.push({ angle, offsetX, offsetY, size, thickness, alpha: 0 });
+        const worldX = ai.x + offsetX; const worldY = ai.y + offsetY;
+        for (let i = 0; i < 8; i++) { particles.push({ x: worldX, y: worldY, color: i % 2 === 0 ? '#8B0000' : '#DC143C', vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5, life: 1, size: Math.random() * 3 + 2, gravity: 0.1 }); }
+    }
+    function drawScratches(ai) {
+        if (!ai.scratches || ai.scratches.length === 0) return;
+        ai.scratches.forEach(scratch => {
+            if (scratch.alpha < 1) scratch.alpha = Math.min(1, scratch.alpha + 0.08);
+            ctx.save(); ctx.translate(scratch.offsetX, scratch.offsetY); ctx.rotate(scratch.angle); ctx.globalAlpha = scratch.alpha;
+            for (let i = -1; i <= 1; i++) {
+                const lineOffset = i * 6;
+                ctx.beginPath(); ctx.moveTo(lineOffset - scratch.size / 2, -scratch.size / 2); ctx.lineTo(lineOffset + scratch.size / 2, scratch.size / 2);
+                ctx.strokeStyle = '#4A0000'; ctx.lineWidth = scratch.thickness + 1.5; ctx.lineCap = 'round'; ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(lineOffset - scratch.size / 2, -scratch.size / 2); ctx.lineTo(lineOffset + scratch.size / 2, scratch.size / 2);
+                ctx.strokeStyle = '#DC143C'; ctx.lineWidth = scratch.thickness; ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(lineOffset - scratch.size / 2 + 1, -scratch.size / 2 + 1); ctx.lineTo(lineOffset + scratch.size / 2 - 1, scratch.size / 2 - 1);
+                ctx.strokeStyle = 'rgba(255,100,100,0.7)'; ctx.lineWidth = scratch.thickness * 0.4; ctx.stroke();
+            }
+            ctx.restore();
+        });
+    }
+
+    // ============ SANGRE ============
+    function spawnBloodSplatter(x, y, direction, count = 15) { for (let i = 0; i < count; i++) { const angle = direction + (Math.random() - 0.5) * Math.PI * 0.8; const speed = 3 + Math.random() * 6; particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2, color: Math.random() < 0.7 ? '#8B0000' : (Math.random() < 0.5 ? '#B22222' : '#5C0000'), life: 1, size: 2 + Math.random() * 3.5, gravity: 0.35, isBlood: true }); } }
+    function spawnBloodPool(x, y) { bloodPools.push({ x, y, radius: 5, maxRadius: 25 + Math.random() * 20, alpha: 0.9, seed: Math.random() * 100 }); }
+    function drawBloodPools() { bloodPools.forEach(pool => { if (pool.radius < pool.maxRadius) pool.radius += 0.3; const r = pool.radius; const grad = ctx.createRadialGradient(pool.x, pool.y, 0, pool.x, pool.y, r); grad.addColorStop(0, `rgba(100, 0, 0, ${pool.alpha})`); grad.addColorStop(0.6, `rgba(70, 0, 0, ${pool.alpha * 0.8})`); grad.addColorStop(1, `rgba(40, 0, 0, 0)`); ctx.fillStyle = grad; ctx.beginPath(); const points = 14; for (let i = 0; i <= points; i++) { const angle = (i / points) * Math.PI * 2; const noise = 0.7 + Math.sin(i * 2.3 + pool.seed) * 0.3 + Math.cos(i * 1.7 + pool.seed) * 0.15; const px = pool.x + Math.cos(angle) * r * noise; const py = pool.y + Math.sin(angle) * r * noise * 0.4; if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); } ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.ellipse(pool.x - r * 0.2, pool.y - r * 0.15, r * 0.3, r * 0.1, 0, 0, Math.PI * 2); ctx.fillStyle = `rgba(180, 30, 30, ${pool.alpha * 0.3})`; ctx.fill(); }); }
+    function addBloodStain(x, y, size) { bloodStains.push({ x, y, size: size * (0.5 + Math.random() * 0.7), alpha: 0.5 + Math.random() * 0.3, seed: Math.random() * 100 }); if (bloodStains.length > 200) bloodStains.shift(); }
+    function drawBloodStains() { bloodStains.forEach(stain => { const r = stain.size; ctx.save(); ctx.globalAlpha = stain.alpha; ctx.fillStyle = '#5C0000'; ctx.beginPath(); const points = 10; for (let i = 0; i <= points; i++) { const angle = (i / points) * Math.PI * 2; const noise = 0.6 + Math.sin(i * 1.9 + stain.seed) * 0.4; const px = stain.x + Math.cos(angle) * r * noise; const py = stain.y + Math.sin(angle) * r * noise * 0.5; if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); } ctx.closePath(); ctx.fill(); ctx.restore(); }); }
+
+    // ============ PARTÍCULAS ============
+    function spawnParticles(x, y, color, count = 8) { for (let i = 0; i < count; i++) { particles.push({ x, y, color, vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 0.5) * 6, life: 1, size: Math.random() * 4 + 2, gravity: 0.15 }); } }
+    function spawnFloatingText(x, y, text, color = 'red') { floatingTexts.push({ x, y, text, color, life: 1, vy: -1.5 }); }
+    function spawnConfetti() { const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A8E6CF', '#FF8B94', '#C7CEEA']; for (let i = 0; i < 100; i++) { confetti.push({ x: Math.random() * canvas.width, y: -20 - Math.random() * 100, vx: (Math.random() - 0.5) * 2, vy: Math.random() * 2 + 1, color: colors[Math.floor(Math.random() * colors.length)], size: Math.random() * 6 + 3, rot: Math.random() * Math.PI * 2, rotSpeed: (Math.random() - 0.5) * 0.2 }); } }
+    function updateAndDrawParticles() {
+        for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.x += p.vx; p.y += p.vy; p.vy += (p.gravity !== undefined ? p.gravity : 0.15); p.life -= 0.025; if (p.isBlood && p.y >= ARENA_GROUND_Y && p.life > 0.3) { addBloodStain(p.x, ARENA_GROUND_Y - 5, p.size); particles.splice(i, 1); continue; } if (p.life <= 0) { particles.splice(i, 1); continue; } ctx.save(); ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+        for (let i = floatingTexts.length - 1; i >= 0; i--) { const ft = floatingTexts[i]; ft.y += ft.vy; ft.life -= 0.02; if (ft.life <= 0) { floatingTexts.splice(i, 1); continue; } ctx.save(); ctx.globalAlpha = ft.life; ctx.fillStyle = ft.color; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'center'; ctx.strokeStyle = 'black'; ctx.lineWidth = 3; ctx.strokeText(ft.text, ft.x, ft.y); ctx.fillText(ft.text, ft.x, ft.y); ctx.restore(); }
+        for (let i = confetti.length - 1; i >= 0; i--) { const c = confetti[i]; c.x += c.vx; c.y += c.vy; c.rot += c.rotSpeed; c.vy += 0.05; if (c.y > canvas.height + 20) { confetti.splice(i, 1); continue; } ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot); ctx.fillStyle = c.color; ctx.fillRect(-c.size/2, -c.size/2, c.size, c.size * 0.6); ctx.restore(); }
+    }
+
+    // ============ COMENTARIOS ============
+    const COMMENTARY = { Español: ["¡Golpe brutal!", "¡Eso tuvo que doler!", "¡Defensa impresionante!", "¡Ataque crítico!", "¡Casi cae!", "¡Contraataque rápido!"], English: ["Brutal hit!", "That must have hurt!", "Impressive defense!", "Critical attack!", "Almost down!", "Quick counter!"], Français: ["Coup brutal !", "Ça a dû faire mal !", "Défense impressionnante !", "Attaque critique !", "Presque à terre !", "Contre-attaqué !"], Deutsch: ["Brutaler Treffer!", "Das muss wehgetan haben!", "Beeindruckende Verteidigung!", "Kritischer Angriff!", "Fast unten!", "Schneller Konter!"], Português: ["Golpe brutal!", "Isso deve ter doído!", "Defesa impressionante!", "Ataque crítico!", "Quase caiu!", "Contra-ataque!"], Italiano: ["Colpo brutale!", "Deve aver fatto male!", "Difesa impressionante!", "Attacco critico!", "Quasi a terra!", "Controattacco!"] };
+    function showCommentary(text, cls) { commentaryEl.innerText = text; commentaryEl.className = 'commentary visible'; if (cls) commentaryEl.classList.add(cls); clearTimeout(commentaryEl._timeout); commentaryEl._timeout = setTimeout(() => { commentaryEl.classList.remove('visible'); commentaryEl.classList.remove('scratch'); commentaryEl.classList.remove('realistic'); }, 1600); }
+    function randomCommentary() { const list = COMMENTARY[currentLang]; return list[Math.floor(Math.random() * list.length)]; }
+
+    // ============ HISTORIAL ============
+    function addToHistory(round, winner, worst) {
+        const li = document.createElement('li'); li.innerHTML = `<span>R${round}: 🏆 ${winner}</span>`; listaHistory.insertBefore(li, listaHistory.firstChild);
+        if (worst) { const li2 = document.createElement('li'); li2.style.color = '#555'; li2.innerHTML = `<span>💀 ${worst}</span>`; listaHistory.insertBefore(li2, listaHistory.children[1]); }
+        while (listaHistory.children.length > 16) listaHistory.removeChild(listaHistory.lastChild);
+    }
+
+    // ============ ANIMACIÓN DE ESPADA ============
+    function updateSwordAnimation(ai) {
+        if (!ai.attackAnimActive) { if (ai.swingProgress > 0) ai.swingProgress = Math.max(0, ai.swingProgress - 0.08); else if (ai.swingProgress < 0) ai.swingProgress = Math.min(0, ai.swingProgress + 0.08); return; }
+        ai.attackAnimTimer += 0.045;
+        if (ai.attackAnimTimer >= 1) { ai.attackAnimActive = false; ai.attackAnimTimer = 0; ai.swingProgress = 0; return; }
+        const t = ai.attackAnimTimer;
+        if (t < 0.4) { const localT = t / 0.4; const eased = localT * localT * (3 - 2 * localT); ai.swingProgress = -eased * 0.15; }
+        else if (t < 0.7) { const localT = (t - 0.4) / 0.3; const eased = localT * localT * (3 - 2 * localT); ai.swingProgress = -0.15 + eased * 1.15; }
+        else { const localT = (t - 0.7) / 0.3; const eased = localT * localT * (3 - 2 * localT); ai.swingProgress = 1.0 * (1 - eased); }
+    }
+
+    // ============ ANIMACIÓN PRINCIPAL ============
+    function animate() {
+        if (paused) { animationId = requestAnimationFrame(animate); return; }
+        time += 0.05;
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        if (document.body.classList.contains('dark')) { gradient.addColorStop(0, "#1a1a2e"); gradient.addColorStop(1, "#16213e"); }
+        else if (realisticModeEnabled && gameState === 'fighting') { gradient.addColorStop(0, "#8B4513"); gradient.addColorStop(1, "#A0522D"); }
+        else { gradient.addColorStop(0, "#FFA500"); gradient.addColorStop(1, "#FFC107"); }
+        ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (realisticModeEnabled) { drawBloodStains(); drawBloodPools(); }
+        [30, canvas.width - 30].forEach(x => {
+            const flameH = 20 + Math.sin(time * 5) * 5;
+            const grad = ctx.createRadialGradient(x, 20, 5, x, 20, 40); grad.addColorStop(0, 'rgba(255, 200, 0, 0.8)'); grad.addColorStop(1, 'rgba(255, 100, 0, 0)');
+            ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(x, 20, 40, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#8B4513'; ctx.fillRect(x - 3, 25, 6, 20);
+            ctx.fillStyle = '#FF4500'; ctx.beginPath(); ctx.ellipse(x, 15, 6, flameH/2, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.ellipse(x, 15, 3, flameH/3, 0, 0, Math.PI * 2); ctx.fill();
+        });
+        avatares.forEach(ai => {
+            if (ai.hitFlash > 0) ai.hitFlash = Math.max(0, ai.hitFlash - 0.08);
+            if (ai.hitShakeX !== 0 || ai.hitShakeY !== 0) { ai.hitShakeX *= 0.85; ai.hitShakeY *= 0.85; if (Math.abs(ai.hitShakeX) < 0.1) ai.hitShakeX = 0; if (Math.abs(ai.hitShakeY) < 0.1) ai.hitShakeY = 0; }
+            updateSwordAnimation(ai);
+            if (gameState === 'idle') {
+                if (ai.isWorstLoser && ai.fallProgress >= 1) {
+                    ai.bounceOffset = 0; ai.swingProgress = 1; ai.attackAnimActive = false;
+                    if (realisticModeEnabled && Math.random() < 0.015) { ai.twitchOffset = (Math.random() - 0.5) * 4; setTimeout(() => { ai.twitchOffset = 0; }, 100); }
+                    if (realisticModeEnabled && ai.paleProgress < 1) ai.paleProgress = Math.min(1, ai.paleProgress + 0.005);
+                } else {
+                    if (!paused) { let speedMultiplier = 1; let wobble = 0; if (realisticModeEnabled && ai.hp < 50) { speedMultiplier = 0.5 + (ai.hp / 100) * 0.5; wobble = Math.sin(time * 8) * 1.5; } ai.x += ai.dx * speedMultiplier; ai.y += ai.dy * speedMultiplier + wobble * 0.2; if (ai.x - 50 < 0 || ai.x + 50 > canvas.width) ai.dx *= -1; if (ai.y - 50 < 0 || ai.y + 70 > canvas.height) ai.dy *= -1; }
+                    if (ganadorActual === ai) ai.bounceOffset = Math.abs(Math.sin(time * 2)) * -15; else ai.bounceOffset = Math.sin(time + ai.x * 0.05) * 3;
+                }
+            } else if (gameState === 'fighting') {
+                if (fightPhase === 'approach') { let dx = (canvas.width / 2 - ai.x) * 0.02; let dy = (canvas.height / 2 - ai.y) * 0.02; ai.x += dx; ai.y += dy; ai.bounceOffset = Math.sin(time * 3 + ai.x * 0.05) * 4; }
+                else if (fightPhase === 'clash') {
+                    ai.x += (Math.random() - 0.5) * 12; ai.y += (Math.random() - 0.5) * 12;
+                    ai.x = Math.max(180, Math.min(canvas.width - 180, ai.x)); ai.y = Math.max(140, Math.min(canvas.height - 140, ai.y));
+                    ai.hp = Math.max(5, ai.hp - Math.random() * 0.3);
+                    if (realisticModeEnabled && ai.hp < 40 && Math.random() < 0.05) addBloodStain(ai.x, ARENA_GROUND_Y - 5, 3 + Math.random() * 4);
+                } else if (fightPhase === 'retreat') {
+                    if (ai.isWorstLoser) {
+                        if (ai.fallProgress < 1) {
+                            let speed = realisticModeEnabled ? 0.008 : 0.012;
+                            if (realisticModeEnabled && ai.fallProgress < 0.2) ai.twitchOffset = Math.sin(time * 15) * 3; else ai.twitchOffset = 0;
+                            ai.fallProgress = Math.min(1, ai.fallProgress + speed);
+                            if (ai.fallProgress >= 1 && !groundImpactHappened) {
+                                groundImpactHappened = true;
+                                if (realisticModeEnabled) { playSound('death'); spawnBloodPool(ai.x, ARENA_GROUND_Y - 20); spawnBloodSplatter(ai.x, ai.y, 0, 25); for (let i = 0; i < 8; i++) addBloodStain(ai.x + (Math.random() - 0.5) * 60, ARENA_GROUND_Y - 10 + Math.random() * 15, 4 + Math.random() * 6); }
+                                else { playSound('thud'); spawnParticles(ai.x, ai.y + 50, '#666', 10); }
+                                spawnFloatingText(ai.x, ai.y - 40, '💀', '#333');
+                                if (realisticModeEnabled) showCommentary(t('realisticDeath'), 'realistic');
+                            }
+                        }
+                        ai.bounceOffset = 0; ai.swingProgress = 1;
+                    } else if (ai.isDefeated && ai.isRetreating) {
+                        let slowFactor = realisticModeEnabled ? 0.04 : 0.06; ai.x += (ai.targetX - ai.x) * slowFactor; ai.y += (ai.targetY - ai.y) * slowFactor; ai.swingProgress = 1;
+                        if (realisticModeEnabled && Math.random() < 0.15) addBloodStain(ai.x, ARENA_GROUND_Y - 8, 2 + Math.random() * 3);
+                    }
+                    if (ganadorActual === ai) { ai.bounceOffset = Math.abs(Math.sin(time * 3)) * -20; if (!ai.attackAnimActive) ai.swingProgress = -0.5 + Math.sin(time * 4) * 0.15; }
+                }
+            }
+            drawAvatar(ai);
+        });
+        updateAndDrawParticles();
+        animationId = requestAnimationFrame(animate);
+    }
+
+    // ============ APLICAR DAÑO REALISTA ============
+    function applyRealisticDamage(victim, attacker) { if (!realisticModeEnabled) return; const dx = victim.x - attacker.x; const dy = victim.y - attacker.y; const direction = Math.atan2(dy, dx); spawnBloodSplatter(victim.x, victim.y - 10, direction, 12 + Math.floor(Math.random() * 8)); victim.hitFlash = 1; victim.hitShakeX = (Math.random() - 0.5) * 12; victim.hitShakeY = (Math.random() - 0.5) * 8; playSound('fleshhit'); if (Math.random() < 0.3) setTimeout(() => playSound('agony'), 100); addBloodStain(victim.x + (Math.random() - 0.5) * 20, ARENA_GROUND_Y - 8, 3 + Math.random() * 5); }
+
+    // ============ BATALLA ============
+    function iniciarBatalla() {
+        const pregunta = inputPregunta.value.trim();
+        if (!pregunta) { alert(t('alert')); return; }
+        if (gameState !== 'idle') return;
+        playSound('click'); roundNumber++; roundCounter.innerText = roundNumber; groundImpactHappened = false;
+        timers.forEach(clearTimeout); timers.forEach(clearInterval); timers = [];
+        avatares.forEach(ai => { ai.isDefeated = false; ai.isRetreating = false; ai.flashRed = false; ai.isWorstLoser = false; ai.fallProgress = 0; ai.targetX = null; ai.targetY = null; ai.bounceOffset = 0; ai.hp = 100; ai.swingAngle = 0; ai.attackAnimActive = false; ai.attackAnimTimer = 0; ai.swingProgress = 0; ai.dx = (Math.random() > 0.5 ? 1 : -1) * 1.5; ai.dy = (Math.random() > 0.5 ? 1 : -1) * 1.5; ai.scratches = []; ai.hitFlash = 0; ai.hitShakeX = 0; ai.hitShakeY = 0; ai.isRealisticDead = false; ai.deathAnimProgress = 0; ai.twitchTimer = 0; ai.twitchOffset = 0; ai.paleProgress = 0; });
+        banca = []; listaBanca.innerHTML = ''; ganadorActual = null; peorPerdedor = null; particles = []; confetti = []; floatingTexts = []; bloodPools = []; bloodStains = [];
+        gameState = 'fighting'; fightPhase = 'approach';
+        btnPelear.disabled = true; btnReiniciar.disabled = true; btnAddAI.disabled = true; btnRemoveAI.disabled = true;
+        paused = false; btnPausa.innerText = '⏸';
+        statusText.innerText = t('phase1'); phaseDisplay.innerText = '1/3'; progressBar.style.width = '0%';
+        let elapsed = 0;
+        const timerInterval = setInterval(() => { if (paused) return; elapsed++; timerDisplay.innerText = 60 - elapsed; progressBar.style.width = (elapsed / 60 * 100) + '%'; }, 1000);
+        timers.push(timerInterval);
+        timers.push(setTimeout(() => {
+            fightPhase = 'clash'; phaseDisplay.innerText = '2/3'; statusText.innerText = t('phase2');
+            showCommentary('⚔️ ' + randomCommentary(), realisticModeEnabled ? 'realistic' : null);
+            const combatInt = setInterval(() => {
+                if (paused) return;
+                playSound('swing'); setTimeout(() => playSound('clash'), 80);
+                canvasContainer.classList.add('shake'); setTimeout(() => canvasContainer.classList.remove('shake'), 200);
+                const attacker = avatares[Math.floor(Math.random() * avatares.length)];
+                const victim = avatares[Math.floor(Math.random() * avatares.length)];
+                if (attacker && !attacker.isDefeated) { if (!attacker.attackAnimActive) { attacker.attackAnimActive = true; attacker.attackAnimTimer = 0; } spawnParticles(attacker.x + 40, attacker.y, '#FFD700', 6); const dmg = Math.floor(Math.random() * 15) + 5; spawnFloatingText(attacker.x, attacker.y - 40, `-${dmg}`, '#DC143C'); }
+                if (scratchModeEnabled && victim && victim !== attacker && !victim.isDefeated) { playSound('scratch'); addScratch(victim); if (Math.random() < 0.5) showCommentary(t('scratchCommentary') + ' ' + victim.name, 'scratch'); spawnFloatingText(victim.x, victim.y - 55, '🩸', '#8B0000'); }
+                if (realisticModeEnabled && victim && victim !== attacker && !victim.isDefeated) { applyRealisticDamage(victim, attacker); if (Math.random() < 0.3) showCommentary(t('realisticHit') + ' ' + victim.name, 'realistic'); }
+                if (Math.random() < 0.3) showCommentary('⚔️ ' + randomCommentary());
+                canvas.style.filter = "brightness(0.8) sepia(1) hue-rotate(-30deg) saturate(3)"; setTimeout(() => { canvas.style.filter = "none"; }, 150);
+            }, 700);
+            timers.push(combatInt);
+        }, 15000));
+        timers.push(setTimeout(() => {
+            fightPhase = 'retreat'; phaseDisplay.innerText = '3/3'; canvas.style.filter = "none"; statusText.innerText = t('phase3');
+            const ganador = avatares[Math.floor(Math.random() * avatares.length)]; ganadorActual = ganador; scoreStats[ganador.name].wins++;
+            const perdedores = avatares.filter(ai => ai !== ganador); peorPerdedor = perdedores[Math.floor(Math.random() * perdedores.length)];
+            const centerX = canvas.width / 2; const centerY = canvas.height / 2;
+            perdedores.forEach(ai => {
+                ai.isDefeated = true; ai.flashRed = true; scoreStats[ai.name].losses++;
+                if (ai === peorPerdedor) {
+                    ai.isWorstLoser = true; ai.isRetreating = false;
+                    let dirX = ai.x - centerX, dirY = ai.y - centerY; let len = Math.sqrt(dirX * dirX + dirY * dirY) || 1;
+                    ai.targetX = ai.x + (dirX / len) * 40; ai.targetY = ai.y + (dirY / len) * 40; ai.x = ai.targetX; ai.y = ai.targetY;
+                    const li = document.createElement('li'); li.classList.add('worst'); if (ai.isUser) li.classList.add('user-item'); li.innerText = `💀 ${ai.name}${scratchModeEnabled ? ` (${ai.scratches.length}🩸)` : ''}`; listaBanca.appendChild(li);
+                } else {
+                    ai.isRetreating = true;
+                    let dirX = ai.x - centerX, dirY = ai.y - centerY; let len = Math.sqrt(dirX * dirX + dirY * dirY);
+                    if (len === 0) { dirX = 1; dirY = 1; len = 1.4; }
+                    ai.targetX = Math.max(50, Math.min(canvas.width - 50, ai.x + (dirX / len) * 200)); ai.targetY = Math.max(50, Math.min(canvas.height - 50, ai.y + (dirY / len) * 200));
+                    const li = document.createElement('li'); if (ai.isUser) li.classList.add('user-item'); li.innerText = `❌ ${ai.name}${scratchModeEnabled ? ` (${ai.scratches.length}🩸)` : ''}`; listaBanca.appendChild(li);
+                }
+            });
+            updateScoreboard(); addToHistory(roundNumber, ganador.name, peorPerdedor.name); spawnConfetti(); playSound('victory');
+            statusText.innerText = t('winner').replace('{name}', ganador.name).replace('{worst}', peorPerdedor.name);
+            showCommentary('🏆 ' + ganador.name + ' WINS!', realisticModeEnabled ? 'realistic' : null);
+        }, 45000));
+        timers.push(setTimeout(() => {
+            avatares.forEach(ai => { ai.isRetreating = false; ai.attackAnimActive = false; });
+            gameState = 'idle'; phaseDisplay.innerText = '-'; progressBar.style.width = '100%'; timerDisplay.innerText = '0';
+            statusText.innerText = t('celebrating').replace('{name}', ganadorActual.name).replace('{worst}', peorPerdedor.name);
+            inputPregunta.value = ''; btnPelear.disabled = false; btnReiniciar.disabled = false; btnAddAI.disabled = false; btnRemoveAI.disabled = false;
+        }, 60000));
+    }
+
+    // ============ REINICIAR ============
+    function reiniciarJuego() {
+        if (gameState === 'fighting') return;
+        timers.forEach(clearTimeout); timers.forEach(clearInterval); timers = [];
+        playSound('click'); initAvatares();
+        roundNumber = 0; roundCounter.innerText = '0'; timerDisplay.innerText = '60'; phaseDisplay.innerText = '-';
+        progressBar.style.width = '0%'; gameState = 'idle'; fightPhase = 'idle';
+        statusText.innerText = t('idle'); btnPelear.disabled = false; btnReiniciar.disabled = false;
+        paused = false; btnPausa.innerText = '⏸'; inputPregunta.value = '';
+        initScoreboard(); listaHistory.innerHTML = '';
+        particles = []; confetti = []; floatingTexts = []; bloodPools = []; bloodStains = [];
+        groundImpactHappened = false;
+    }
+
+    // ============ PAUSA ============
+    btnPausa.addEventListener('click', () => { if (gameState !== 'fighting') return; paused = !paused; btnPausa.innerText = paused ? '▶' : '⏸'; playSound('click'); });
+
+    // ============ EVENTOS ============
+    btnPelear.addEventListener('click', iniciarBatalla);
+    btnReiniciar.addEventListener('click', reiniciarJuego);
+    inputPregunta.addEventListener('keypress', (e) => { if (e.key === 'Enter') iniciarBatalla(); });
+    idiomaSelect.addEventListener('change', (e) => { currentLang = e.target.value; playSound('click'); applyTranslation(); updateModeSelectLabels(); });
+
+    // ============ INICIO ============
+    preloadImages().then(() => {
+        initAvatares();
+        initScoreboard();
+        applyTranslation();
+        animate();
+        setTimeout(() => loadingScreen.classList.add('hidden'), 800);
+    });
+
+</script>
+</body>
+</html>
